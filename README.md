@@ -1,6 +1,6 @@
 # spring-ai-qianwen-spring-boot-starter
 
-Spring Boot Starter For Spring AI Implementation Base On QianWen
+Spring Boot Starter For Spring AI Implementation Base On Aliyun QianWen
 
 ### 说明
 
