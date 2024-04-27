@@ -1,4 +1,4 @@
-package org.springframework.ai.qianwen;
+package org.springframework.ai.aliyun.dashscope;
 
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatRequest;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Flux;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class QianwenAiChatClient
+public class AliyunAiDashscopeChatClient
         extends AbstractFunctionCallSupport<Message, ChatRequest, ResponseEntity<ChatResponse>>
         implements ChatClient, StreamingChatClient {
 
@@ -32,25 +32,25 @@ public class QianwenAiChatClient
     /**
      * Default options to be used for all chat requests.
      */
-    private QianwenAiChatOptions defaultOptions;
+    private AliyunAiDashscopeChatOptions defaultOptions;
     /**
      * Low-level 智普 API library.
      */
     private final Qianfan qianfan;
 
-    public QianwenAiChatClient(Qianfan qianfan) {
-        this(qianfan, QianwenAiChatOptions.builder()
+    public AliyunAiDashscopeChatClient(Qianfan qianfan) {
+        this(qianfan, AliyunAiDashscopeChatOptions.builder()
                         .withTemperature(0.95f)
                         .withTopP(0.7f)
                         //.withModel(ZhipuAiApi.ChatModel.GLM_3_TURBO.getValue())
                         .build());
     }
 
-    public QianwenAiChatClient(Qianfan qianfan, QianwenAiChatOptions options) {
+    public AliyunAiDashscopeChatClient(Qianfan qianfan, AliyunAiDashscopeChatOptions options) {
         this(qianfan, options, null);
     }
 
-    public QianwenAiChatClient(Qianfan qianfan, QianwenAiChatOptions options, FunctionCallbackContext functionCallbackContext) {
+    public AliyunAiDashscopeChatClient(Qianfan qianfan, AliyunAiDashscopeChatOptions options, FunctionCallbackContext functionCallbackContext) {
         super(functionCallbackContext);
         Assert.notNull(qianfan, "Qianfan must not be null");
         Assert.notNull(options, "Options must not be null");
@@ -171,7 +171,7 @@ public class QianwenAiChatClient
         if (prompt.getOptions() != null) {
             if (prompt.getOptions() instanceof ChatOptions runtimeOptions) {
                 var updatedRuntimeOptions = ModelOptionsUtils.copyToTarget(runtimeOptions, ChatOptions.class,
-                        QianwenAiChatOptions.class);
+                        AliyunAiDashscopeChatOptions.class);
 
                 Set<String> promptEnabledFunctions = this.handleFunctionCallbackConfigurations(updatedRuntimeOptions,
                         IS_RUNTIME_CALL);
@@ -190,7 +190,7 @@ public class QianwenAiChatClient
         if (!CollectionUtils.isEmpty(functionsForThisRequest)) {
 
             request = ModelOptionsUtils.merge(
-                    QianwenAiChatOptions.builder().withTools(this.getFunctionTools(functionsForThisRequest)).build(),
+                    AliyunAiDashscopeChatOptions.builder().withTools(this.getFunctionTools(functionsForThisRequest)).build(),
                     request, ChatRequest.class);
         }
 

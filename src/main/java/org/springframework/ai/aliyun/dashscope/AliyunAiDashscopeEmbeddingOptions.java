@@ -1,4 +1,4 @@
-package org.springframework.ai.qianwen;
+package org.springframework.ai.aliyun.dashscope;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,7 +8,7 @@ import org.springframework.ai.embedding.EmbeddingOptions;
 
 import java.util.Map;
 
-public class QianwenAiEmbeddingOptions implements EmbeddingOptions {
+public class AliyunAiDashscopeEmbeddingOptions implements EmbeddingOptions {
 
     /**
      * NOTE: Synthetic field not part of the official ZhiPuAi API.
@@ -32,10 +32,10 @@ public class QianwenAiEmbeddingOptions implements EmbeddingOptions {
 
     public static class Builder {
 
-        protected QianwenAiEmbeddingOptions options;
+        protected AliyunAiDashscopeEmbeddingOptions options;
 
         public Builder() {
-            this.options = new QianwenAiEmbeddingOptions();
+            this.options = new AliyunAiDashscopeEmbeddingOptions();
         }
 
         public Builder withModel(String model) {
@@ -43,14 +43,14 @@ public class QianwenAiEmbeddingOptions implements EmbeddingOptions {
             return this;
         }
 
-        public QianwenAiEmbeddingOptions build() {
+        public AliyunAiDashscopeEmbeddingOptions build() {
             return this.options;
         }
 
     }
 
     /**
-     * Convert the {@link QianwenAiEmbeddingOptions} object to a {@link Map} of key/value pairs.
+     * Convert the {@link AliyunAiDashscopeEmbeddingOptions} object to a {@link Map} of key/value pairs.
      * @return The {@link Map} of key/value pairs.
      */
     public Map<String, Object> toMap() {

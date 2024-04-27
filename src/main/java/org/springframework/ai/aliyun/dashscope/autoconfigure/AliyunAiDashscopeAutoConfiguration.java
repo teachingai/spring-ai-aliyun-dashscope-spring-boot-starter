@@ -1,15 +1,16 @@
-package org.springframework.ai.qianwen.autoconfigure;
+package org.springframework.ai.aliyun.dashscope.autoconfigure;
 
+import com.alibaba.dashscope.aigc.generation.Generation;
 import com.baidubce.qianfan.Qianfan;
 import com.huaweicloud.pangu.dev.sdk.api.llms.LLM;
 import com.huaweicloud.pangu.dev.sdk.api.llms.LLMs;
 import com.huaweicloud.pangu.dev.sdk.api.llms.config.LLMConfig;
+import org.springframework.ai.aliyun.dashscope.AliyunAiDashscopeChatClient;
+import org.springframework.ai.aliyun.dashscope.AliyunAiDashscopeEmbeddingClient;
 import org.springframework.ai.autoconfigure.mistralai.MistralAiEmbeddingProperties;
 import org.springframework.ai.autoconfigure.retry.SpringAiRetryAutoConfiguration;
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.function.FunctionCallbackContext;
-import org.springframework.ai.qianwen.QianwenAiChatClient;
-import org.springframework.ai.qianwen.QianwenAiEmbeddingClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -27,13 +28,13 @@ import java.util.List;
  * {@link AutoConfiguration Auto-configuration} for 百度千帆 Chat Client.
  */
 @AutoConfiguration(after = { RestClientAutoConfiguration.class, SpringAiRetryAutoConfiguration.class })
-@EnableConfigurationProperties({ QianwenAiChatProperties.class, QianwenAiConnectionProperties.class, QianwenAiEmbeddingProperties.class })
-@ConditionalOnClass(LLMs.class)
-public class QianwenAiAutoConfiguration {
+@EnableConfigurationProperties({ AliyunAiDashscopeChatProperties.class, AliyunAiDashscopeConnectionProperties.class, AliyunAiDashscopeEmbeddingProperties.class })
+@ConditionalOnClass(Generation.class)
+public class AliyunAiDashscopeAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public LLM llm(QianwenAiConnectionProperties properties) {
+    public LLM llm(AliyunAiDashscopeConnectionProperties properties) {
         //Assert.isNull(properties.getType(), "Qianfan Type must be set");
         Assert.hasText(properties.getAccessKey(), "Qianfan API Access Key must be set");
         Assert.hasText(properties.getSecretKey(), "Qianfan API Secret Key must be set");
@@ -48,23 +49,23 @@ public class QianwenAiAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = QianwenAiChatProperties.CONFIG_PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public QianwenAiChatClient qianfanAiChatClient(Qianfan qianfan,
-                                                   QianwenAiChatProperties chatProperties,
-                                                   List<FunctionCallback> toolFunctionCallbacks,
-                                                   FunctionCallbackContext functionCallbackContext) {
+    @ConditionalOnProperty(prefix = AliyunAiDashscopeChatProperties.CONFIG_PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
+    public AliyunAiDashscopeChatClient qianfanAiChatClient(Qianfan qianfan,
+                                                           AliyunAiDashscopeChatProperties chatProperties,
+                                                           List<FunctionCallback> toolFunctionCallbacks,
+                                                           FunctionCallbackContext functionCallbackContext) {
         if (!CollectionUtils.isEmpty(toolFunctionCallbacks)) {
             chatProperties.getOptions().getFunctionCallbacks().addAll(toolFunctionCallbacks);
         }
-        return new QianwenAiChatClient(qianfan, chatProperties.getOptions(), functionCallbackContext);
+        return new AliyunAiDashscopeChatClient(qianfan, chatProperties.getOptions(), functionCallbackContext);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = MistralAiEmbeddingProperties.CONFIG_PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public QianwenAiEmbeddingClient qianfanAiEmbeddingClient(Qianfan qianfan, QianwenAiEmbeddingProperties embeddingProperties) {
+    public AliyunAiDashscopeEmbeddingClient qianfanAiEmbeddingClient(Qianfan qianfan, AliyunAiDashscopeEmbeddingProperties embeddingProperties) {
 
-        return new QianwenAiEmbeddingClient(qianfan, embeddingProperties.getMetadataMode(), embeddingProperties.getOptions());
+        return new AliyunAiDashscopeEmbeddingClient(qianfan, embeddingProperties.getMetadataMode(), embeddingProperties.getOptions());
     }
 
     @Bean

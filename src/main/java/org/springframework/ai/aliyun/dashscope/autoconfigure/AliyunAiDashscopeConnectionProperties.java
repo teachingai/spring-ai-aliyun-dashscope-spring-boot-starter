@@ -1,4 +1,4 @@
-package org.springframework.ai.qianwen.autoconfigure;
+package org.springframework.ai.aliyun.dashscope.autoconfigure;
 
 import com.baidubce.qianfan.core.auth.Auth;
 import com.baidubce.qianfan.model.RateLimitConfig;
@@ -7,8 +7,8 @@ import com.huaweicloud.pangu.dev.sdk.api.llms.LLMs;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-@ConfigurationProperties(QianwenAiConnectionProperties.CONFIG_PREFIX)
-public class QianwenAiConnectionProperties {
+@ConfigurationProperties(AliyunAiDashscopeConnectionProperties.CONFIG_PREFIX)
+public class AliyunAiDashscopeConnectionProperties {
 
     public static final String CONFIG_PREFIX = "spring.ai.qianfan";
 

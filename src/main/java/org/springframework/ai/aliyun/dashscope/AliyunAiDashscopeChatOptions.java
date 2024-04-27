@@ -1,4 +1,4 @@
-package org.springframework.ai.qianwen;
+package org.springframework.ai.aliyun.dashscope;
 
 import com.baidubce.qianfan.model.chat.Function;
 import com.baidubce.qianfan.model.chat.ToolChoice;
@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class QianwenAiChatOptions implements FunctionCallingOptions, ChatOptions {
+public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, ChatOptions {
 
     public static final Double DEFAULT_TEMPERATURE = 0.95D;
 
@@ -133,7 +133,7 @@ public class QianwenAiChatOptions implements FunctionCallingOptions, ChatOptions
 
     public static class Builder {
 
-        private final QianwenAiChatOptions options = new QianwenAiChatOptions();
+        private final AliyunAiDashscopeChatOptions options = new AliyunAiDashscopeChatOptions();
 
         public Builder withModel(String model) {
             this.options.setModel(model);
@@ -165,7 +165,7 @@ public class QianwenAiChatOptions implements FunctionCallingOptions, ChatOptions
             return this;
         }
 
-        public QianwenAiChatOptions build() {
+        public AliyunAiDashscopeChatOptions build() {
             return this.options;
         }
 
@@ -241,7 +241,7 @@ public class QianwenAiChatOptions implements FunctionCallingOptions, ChatOptions
     }
 
     /**
-     * Convert the {@link QianwenAiChatOptions} object to a {@link Map} of key/value pairs.
+     * Convert the {@link AliyunAiDashscopeChatOptions} object to a {@link Map} of key/value pairs.
      * @return The {@link Map} of key/value pairs.
      */
     public Map<String, Object> toMap() {
@@ -256,11 +256,11 @@ public class QianwenAiChatOptions implements FunctionCallingOptions, ChatOptions
     }
 
     /**
-     * Helper factory method to create a new {@link QianwenAiChatOptions} instance.
-     * @return A new {@link QianwenAiChatOptions} instance.
+     * Helper factory method to create a new {@link AliyunAiDashscopeChatOptions} instance.
+     * @return A new {@link AliyunAiDashscopeChatOptions} instance.
      */
-    public static QianwenAiChatOptions create() {
-        return new QianwenAiChatOptions();
+    public static AliyunAiDashscopeChatOptions create() {
+        return new AliyunAiDashscopeChatOptions();
     }
 
     /**

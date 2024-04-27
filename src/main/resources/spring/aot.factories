@@ -1,2 +1,2 @@
 org.springframework.aot.hint.RuntimeHintsRegistrar=\
-	org.springframework.ai.qianwen.aot.QianwenAiRuntimeHints
+	org.springframework.ai.aliyun.dashscope.aot.AliyunAiDashscopeRuntimeHints

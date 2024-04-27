@@ -1,4 +1,4 @@
-package org.springframework.ai.qianwen;
+package org.springframework.ai.aliyun.dashscope;
 
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.embedding.EmbeddingData;
@@ -16,11 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QianwenAiEmbeddingClient extends AbstractEmbeddingClient {
+public class AliyunAiDashscopeEmbeddingClient extends AbstractEmbeddingClient {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final QianwenAiEmbeddingOptions defaultOptions;
+    private final AliyunAiDashscopeEmbeddingOptions defaultOptions;
 
     private final MetadataMode metadataMode;
 
@@ -29,15 +29,15 @@ public class QianwenAiEmbeddingClient extends AbstractEmbeddingClient {
      */
     private final Qianfan qianfan;
 
-    public QianwenAiEmbeddingClient(Qianfan qianfan) {
+    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan) {
         this(qianfan, MetadataMode.EMBED);
     }
 
-    public QianwenAiEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode) {
-        this(qianfan, metadataMode, QianwenAiEmbeddingOptions.builder().build());
+    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode) {
+        this(qianfan, metadataMode, AliyunAiDashscopeEmbeddingOptions.builder().build());
     }
 
-    public QianwenAiEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode, QianwenAiEmbeddingOptions options) {
+    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode, AliyunAiDashscopeEmbeddingOptions options) {
         Assert.notNull(qianfan, "Qianfan must not be null");
         Assert.notNull(metadataMode, "metadataMode must not be null");
         Assert.notNull(options, "options must not be null");

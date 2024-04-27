@@ -1,19 +1,19 @@
-package org.springframework.ai.qianwen.autoconfigure;
+package org.springframework.ai.aliyun.dashscope.autoconfigure;
 
-import org.springframework.ai.qianwen.QianwenAiChatOptions;
+import org.springframework.ai.aliyun.dashscope.AliyunAiDashscopeChatOptions;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-@ConfigurationProperties(QianwenAiChatProperties.CONFIG_PREFIX)
-public class QianwenAiChatProperties {
+@ConfigurationProperties(AliyunAiDashscopeChatProperties.CONFIG_PREFIX)
+public class AliyunAiDashscopeChatProperties {
 
-    public static final String CONFIG_PREFIX = "spring.ai.qianfan.chat";
+    public static final String CONFIG_PREFIX = "spring.ai.aliyunai.dashscope.chat";
 
-    public static final String DEFAULT_CHAT_MODEL = "ernie-4.0-8k";
+    public static final String DEFAULT_CHAT_MODEL = "qwen-turbo";
 
-    private static final Float DEFAULT_TEMPERATURE = 0.95f;
+    private static final Float DEFAULT_TEMPERATURE = 0.8f;
 
-    private static final Float DEFAULT_TOP_P = 1.0f;
+    private static final Float DEFAULT_TOP_P = 0.8f;
 
     /**
      * Enable 百度千帆 chat client.
@@ -26,17 +26,17 @@ public class QianwenAiChatProperties {
      * generative's defaults.
      */
     @NestedConfigurationProperty
-    private QianwenAiChatOptions options = QianwenAiChatOptions.builder()
+    private AliyunAiDashscopeChatOptions options = AliyunAiDashscopeChatOptions.builder()
             .withModel(DEFAULT_CHAT_MODEL)
             .withTemperature(DEFAULT_TEMPERATURE)
             .withTopP(DEFAULT_TOP_P)
             .build();
 
-    public QianwenAiChatOptions getOptions() {
+    public AliyunAiDashscopeChatOptions getOptions() {
         return this.options;
     }
 
-    public void setOptions(QianwenAiChatOptions options) {
+    public void setOptions(AliyunAiDashscopeChatOptions options) {
         this.options = options;
     }
 

@@ -1,1 +1,1 @@
-qianfan.autoconfigure.ZhipuAiAutoConfiguration
+org.springframework.ai.aliyun.dashscope.autoconfigure.AliyunAiDashscopeAutoConfiguration

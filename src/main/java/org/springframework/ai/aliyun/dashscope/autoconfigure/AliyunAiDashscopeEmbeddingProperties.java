@@ -1,12 +1,12 @@
-package org.springframework.ai.qianwen.autoconfigure;
+package org.springframework.ai.aliyun.dashscope.autoconfigure;
 
+import org.springframework.ai.aliyun.dashscope.AliyunAiDashscopeEmbeddingOptions;
 import org.springframework.ai.document.MetadataMode;
-import org.springframework.ai.qianwen.QianwenAiEmbeddingOptions;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-@ConfigurationProperties(QianwenAiEmbeddingProperties.CONFIG_PREFIX)
-public class QianwenAiEmbeddingProperties {
+@ConfigurationProperties(AliyunAiDashscopeEmbeddingProperties.CONFIG_PREFIX)
+public class AliyunAiDashscopeEmbeddingProperties {
 
     public static final String CONFIG_PREFIX = "spring.ai.qianfan.embedding";
 
@@ -25,15 +25,15 @@ public class QianwenAiEmbeddingProperties {
      * generative's defaults.
      */
     @NestedConfigurationProperty
-    private QianwenAiEmbeddingOptions options = QianwenAiEmbeddingOptions.builder()
+    private AliyunAiDashscopeEmbeddingOptions options = AliyunAiDashscopeEmbeddingOptions.builder()
             .withModel(DEFAULT_EMBEDDING_MODEL)
             .build();
 
-    public QianwenAiEmbeddingOptions getOptions() {
+    public AliyunAiDashscopeEmbeddingOptions getOptions() {
         return this.options;
     }
 
-    public void setOptions(QianwenAiEmbeddingOptions options) {
+    public void setOptions(AliyunAiDashscopeEmbeddingOptions options) {
         this.options = options;
     }
 
