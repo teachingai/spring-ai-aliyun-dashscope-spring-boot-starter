@@ -73,7 +73,7 @@
 
 ``` xml
 <dependency>
-	<groupId>com.github.hiwepy</groupId>
+	<groupId>com.github.teachingai</groupId>
 	<artifactId>spring-ai-aliyun-dashscope-spring-boot-starter</artifactId>
 	<version>${project.version}</version>
 </dependency>
