@@ -1,8 +1,6 @@
 package org.springframework.ai.aliyun.dashscope;
 
-import com.baidubce.qianfan.model.chat.Function;
-import com.baidubce.qianfan.model.chat.ToolChoice;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.dashscope.tools.ToolFunction;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,43 +19,61 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, ChatOptions {
 
-    public static final Double DEFAULT_TEMPERATURE = 0.95D;
+    public static final Float DEFAULT_TEMPERATURE = 0.95F;
 
     /**
-     * 所要调用的模型编码
+     * 指定用于对话的通义千问模型名，目前可选择 qwen-turbo、qwen-plus、qwen-max、qwen-max-0403、qwen-max-0107、qwen-max-1201和qwen-max-longcontext。
      */
     @JsonProperty("model")
     private String model;
 
     /**
-     * 采样温度，控制输出的随机性，必须为正数
-     * 取值范围是：(0.0, 1.0)，不能等于 0，默认值为 0.95，值越大，会使输出更随机，更具创造性；值越小，输出会更加稳定或确定
-     * 建议您根据应用场景调整 top_p 或 temperature 参数，但不要同时调整两个参数
-     * 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定，范围 (0, 1.0]，不能为0
+     * 生成时使用的随机数种子，用于控制模型生成内容的随机性。seed支持无符号64位整数。
      */
-    @JsonProperty("temperature")
-    private Double temperature = DEFAULT_TEMPERATURE;
+    @JsonProperty("seed")
+    private Integer seed;
 
     /**
-     * 用温度取样的另一种方法，称为核取样取值范围是：(0.0, 1.0) 开区间，不能等于 0 或 1，默认值为 0.7
-     * 模型考虑具有 top_p 概率质量 tokens 的结果
-     * 例如：0.1 意味着模型解码器只考虑从前 10% 的概率的候选集中取 tokens
-     * 建议您根据应用场景调整 top_p 或 temperature 参数，但不要同时调整两个参数
+     * 指定模型最大输出token数
+     * - qwen-turbo最大值和默认值为1500 tokens。
+     * - qwen-max、qwen-max-1201、qwen-max-longcontext和qwen-plus模型，最大值和默认值均为2000 tokens。
+     */
+    @JsonProperty("max_tokens")
+    private Integer maxTokens;
+
+    /**
+     * 生成过程中的核采样方法概率阈值，例如，取值为0.8时，仅保留概率加起来大于等于0.8的最可能token的最小集合作为候选集。
+     * 取值范围为（0,1.0)，取值越大，生成的随机性越高；取值越低，生成的确定性越高。
      */
     @JsonProperty("top_p")
-    private Double topP;
+    private Float topP;
 
     /**
-     * 通过对已生成的token增加惩罚，减少重复生成的现象。说明：值越大表示惩罚越大，取值范围：[1.0, 2.0]
+     * 生成时，采样候选集的大小。例如，取值为50时，仅将单次生成中得分最高的50个token组成随机采样的候选集。取值越大，生成的随机性越高；取值越小，生成的确定性越高。取值为None或当top_k大于100时，表示不启用top_k策略，此时，仅有top_p策略生效。
      */
-    @JsonProperty(value = "penaltyScore")
-    private Double penaltyScore;
+    @JsonProperty("top_k")
+    private Integer topK;
 
     /**
-     * 模型人设，主要用于人设设定
+     * 用于控制模型生成时连续序列中的重复度。提高repetition_penalty时可以降低模型生成的重复度，1.0表示不做惩罚。没有严格的取值范围。
      */
-    @JsonProperty(value = "system")
-    private String system;
+    @JsonProperty(value = "repetition_penalty")
+    private Float repetitionPenalty;
+
+    /**
+     * 用户控制模型生成时整个序列中的重复度。提高presence_penalty时可以降低模型生成的重复度，取值范围[-2.0, 2.0]。
+     */
+    @JsonProperty(value = "presence_penalty")
+    private Float presencePenalty;
+
+    /**
+     * 用于控制模型回复的随机性和多样性。具体来说，temperature值控制了生成文本时对每个候选词的概率分布进行平滑的程度。
+     * 较高的temperature值会降低概率分布的峰值，使得更多的低概率词被选择，生成结果更加多样化；
+     * 而较低的temperature值则会增强概率分布的峰值，使得高概率词更容易被选择，生成结果更加确定。
+     * 取值范围：[0, 2)，不建议取值为0，无意义。
+     */
+    @JsonProperty("temperature")
+    private Float temperature = DEFAULT_TEMPERATURE;
 
     /**
      * 终端用户的唯一ID，协助平台对终端用户的违规行为、生成违法及不良信息或其他滥用行为进行干预。ID长度要求：最少6个字符，最多128个字符。
@@ -68,44 +84,49 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
     /**
      * 生成停止标识，当模型生成结果以stop中某个元素结尾时，停止文本生成
      */
-    @JsonProperty("stop")
+    @JsonProperty("stopStrings")
     private List<String> stop;
 
     /**
-     * 是否强制关闭实时搜索功能
+     * 用于控制模型在生成文本时是否使用互联网搜索结果进行参考。取值如下：
+     * True：启用互联网搜索，模型会将搜索结果作为文本生成过程中的参考信息，但模型会基于其内部逻辑判断是否使用互联网搜索结果。
+     * False（默认）：关闭互联网搜索。
      */
-    @JsonProperty(value = "user")
-    private Boolean disableSearch;
+    @JsonProperty(value = "enable_search")
+    private Boolean enableSearch;
 
     /**
-     * 是否开启上角标返回
+     * 用于指定返回结果的格式，默认为text，也可选择message。当设置为message时，输出格式请参考返回结果。推荐您优先使用message格式。
      */
-    @JsonProperty(value = "user")
-    private Boolean enableCitation;
+    @JsonProperty(value = "result_format")
+    private String responseFormat = "message";
 
     /**
-     * 指定模型最大输出token数
+     * 控制在流式输出模式下是否开启增量输出，即后续输出内容是否包含已输出的内容。
+     * 设置为True时，将开启增量输出模式，后面输出不会包含已经输出的内容，您需要自行拼接整体输出；
+     * 设置为False则会包含已输出的内容。
      */
-    @JsonProperty("max_tokens")
-    private Integer maxTokens;
+    @JsonProperty(value = "incremental_output")
+    private Boolean incrementalOutput;
 
     /**
-     * 指定响应内容的格式
-     */
-    @JsonProperty(value = "responseFormat")
-    private String responseFormat;
-
-    /**
-     * 一个可触发函数的描述列表
+     * 用于指定可供模型调用的工具库，一次function call流程模型会从中选择其中一个工具。
      */
     @NestedConfigurationProperty
-    private @JsonProperty("tools") List<Function> tools;
+    private @JsonProperty("tools") List<ToolFunction> tools;
 
     /**
-     * 在函数调用场景下，提示大模型选择指定的函数
+     * 在使用tools参数时，用于控制模型调用指定工具。有四种取值：
+     *
+     *     none表示不调用工具。tools参数为空时，默认值为none。
+     *     auto表示模型判断是否调用工具，可能调用也可能不调用。tools参数不为空时，默认值为auto。
+     *     object结构可以指定模型调用指定工具。例如{"type": "function", "function": {"name": "user_function"}}
+     *         type现在只支持function
+     *         function
+     *             name表示期望被调用的工具名称
      */
     @NestedConfigurationProperty
-    private @JsonProperty("tool_choice") ToolChoice toolChoice;
+    private @JsonProperty("tool_choice") Object toolChoice;
 
     @Override
     public List<FunctionCallback> getFunctionCallbacks() {
@@ -140,7 +161,12 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
             return this;
         }
 
-        public Builder withMaxToken(Integer maxTokens) {
+        public Builder withSeed(Integer seed) {
+            this.options.seed = seed;
+            return this;
+        }
+
+        public Builder withMaxTokens(Integer maxTokens) {
             this.options.setMaxTokens(maxTokens);
             return this;
         }
@@ -155,12 +181,52 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
             return this;
         }
 
-        public Builder withTools(List<Function> tools) {
+        public Builder withTopK(Integer topK) {
+            this.options.setTopK(topK);
+            return this;
+        }
+
+        public Builder withRepetitionPenalty(Float repetitionPenalty) {
+            this.options.repetitionPenalty = repetitionPenalty;
+            return this;
+        }
+
+        public Builder withPresencePenalty(Float presencePenalty) {
+            this.options.presencePenalty = presencePenalty;
+            return this;
+        }
+
+        public Builder withUser(String user) {
+            this.options.setUser(user);
+            return this;
+        }
+
+        public Builder withStop(List<String> stop) {
+            this.options.setStop(stop);
+            return this;
+        }
+
+        public Builder withEnableSearch(Boolean enableSearch) {
+            this.options.enableSearch = enableSearch;
+            return this;
+        }
+
+        public Builder withResponseFormat(String responseFormat) {
+            this.options.responseFormat = responseFormat;
+            return this;
+        }
+
+        public Builder withIncrementalOutput(Boolean incrementalOutput) {
+            this.options.incrementalOutput = incrementalOutput;
+            return this;
+        }
+
+        public Builder withTools(List<ToolFunction> tools) {
             this.options.tools = tools;
             return this;
         }
 
-        public Builder withToolChoice(ToolChoice toolChoice) {
+        public Builder withToolChoice(Object toolChoice) {
             this.options.toolChoice = toolChoice;
             return this;
         }
@@ -171,6 +237,40 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
 
     }
 
+    @Override
+    public Float getTopP() {
+        return this.topP;
+    }
+
+    public void setTopP(Float topP) {
+        this.topP = topP;
+    }
+
+    @Override
+    public Integer getTopK() {
+        return topK;
+    }
+
+    public void setTopK(Integer topK) {
+        this.topK = topK;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public Integer getSeed() {
+        return seed;
+    }
+
+    public void setSeed(Integer seed) {
+        this.seed = seed;
+    }
+
     public Integer getMaxTokens() {
         return maxTokens;
     }
@@ -179,12 +279,29 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
         this.maxTokens = maxTokens;
     }
 
-    public Boolean getDoSample() {
-        return doSample;
+    public Float getRepetitionPenalty() {
+        return repetitionPenalty;
     }
 
-    public void setDoSample(Boolean doSample) {
-        this.doSample = doSample;
+    public void setRepetitionPenalty(Float repetitionPenalty) {
+        this.repetitionPenalty = repetitionPenalty;
+    }
+
+    public Float getPresencePenalty() {
+        return presencePenalty;
+    }
+
+    public void setPresencePenalty(Float presencePenalty) {
+        this.presencePenalty = presencePenalty;
+    }
+
+    @Override
+    public Float getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Float temperature) {
+        this.temperature = temperature;
     }
 
     public String getUser() {
@@ -203,41 +320,44 @@ public class AliyunAiDashscopeChatOptions implements FunctionCallingOptions, Cha
         this.stop = stop;
     }
 
-    @Override
-    public Float getTemperature() {
-        return this.temperature;
+    public Boolean getEnableSearch() {
+        return enableSearch;
     }
 
-    public void setTemperature(Float temperature) {
-        this.temperature = temperature;
+    public void setEnableSearch(Boolean enableSearch) {
+        this.enableSearch = enableSearch;
     }
 
-    @Override
-    public Float getTopP() {
-        return this.topP;
+    public String getResponseFormat() {
+        return responseFormat;
     }
 
-    public void setTopP(Float topP) {
-        this.topP = topP;
+    public void setResponseFormat(String responseFormat) {
+        this.responseFormat = responseFormat;
     }
 
-    @Override
-    @JsonIgnore
-    public Integer getTopK() {
-        throw new UnsupportedOperationException("Unimplemented method 'getTopK'");
+    public Boolean getIncrementalOutput() {
+        return incrementalOutput;
     }
 
-    @JsonIgnore
-    public void setTopK(Integer topK) {
-        throw new UnsupportedOperationException("Unimplemented method 'setTopK'");
+    public void setIncrementalOutput(Boolean incrementalOutput) {
+        this.incrementalOutput = incrementalOutput;
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public List<ToolFunction> getTools() {
+        return tools;
     }
 
-    public String getModel() {
-        return model;
+    public void setTools(List<ToolFunction> tools) {
+        this.tools = tools;
+    }
+
+    public Object getToolChoice() {
+        return toolChoice;
+    }
+
+    public void setToolChoice(Object toolChoice) {
+        this.toolChoice = toolChoice;
     }
 
     /**

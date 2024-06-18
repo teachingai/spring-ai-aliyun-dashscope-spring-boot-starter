@@ -378,7 +378,7 @@
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
 		<java.version>17</java.version>
 		<spring-ai.version>1.0.3</spring-ai.version>
-		<aliyun-dashscope.version>2.13.0</aliyun-dashscope.version>
+		<aliyun-dashscope.version>2.14.8</aliyun-dashscope.version>
 	</properties>
 
 	<dependencyManagement>

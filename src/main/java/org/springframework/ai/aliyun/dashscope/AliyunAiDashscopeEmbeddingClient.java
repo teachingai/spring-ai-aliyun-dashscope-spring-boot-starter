@@ -1,20 +1,16 @@
 package org.springframework.ai.aliyun.dashscope;
 
-import com.baidubce.qianfan.Qianfan;
-import com.baidubce.qianfan.model.embedding.EmbeddingData;
-import com.baidubce.qianfan.model.embedding.EmbeddingUsage;
+import com.alibaba.dashscope.embeddings.*;
+import com.alibaba.dashscope.exception.NoApiKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.embedding.*;
-import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.util.Assert;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AliyunAiDashscopeEmbeddingClient extends AbstractEmbeddingClient {
 
@@ -24,25 +20,22 @@ public class AliyunAiDashscopeEmbeddingClient extends AbstractEmbeddingClient {
 
     private final MetadataMode metadataMode;
 
-    /**
-     * Low-level 百度千帆 API library.
-     */
-    private final Qianfan qianfan;
+    private final TextEmbedding embedding;
 
-    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan) {
-        this(qianfan, MetadataMode.EMBED);
+    public AliyunAiDashscopeEmbeddingClient(TextEmbedding embedding) {
+        this(embedding, MetadataMode.EMBED);
     }
 
-    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode) {
-        this(qianfan, metadataMode, AliyunAiDashscopeEmbeddingOptions.builder().build());
+    public AliyunAiDashscopeEmbeddingClient(TextEmbedding embedding, MetadataMode metadataMode) {
+        this(embedding, metadataMode, AliyunAiDashscopeEmbeddingOptions.builder().build());
     }
 
-    public AliyunAiDashscopeEmbeddingClient(Qianfan qianfan, MetadataMode metadataMode, AliyunAiDashscopeEmbeddingOptions options) {
-        Assert.notNull(qianfan, "Qianfan must not be null");
+    public AliyunAiDashscopeEmbeddingClient(TextEmbedding embedding, MetadataMode metadataMode, AliyunAiDashscopeEmbeddingOptions options) {
+        Assert.notNull(embedding, "TextEmbedding must not be null");
         Assert.notNull(metadataMode, "metadataMode must not be null");
         Assert.notNull(options, "options must not be null");
 
-        this.qianfan = qianfan;
+        this.embedding = embedding;
         this.metadataMode = metadataMode;
         this.defaultOptions = options;
     }
@@ -60,8 +53,13 @@ public class AliyunAiDashscopeEmbeddingClient extends AbstractEmbeddingClient {
 
         logger.debug("Retrieving embeddings");
 
-        com.baidubce.qianfan.model.embedding.EmbeddingRequest embeddingRequest = this.toEmbeddingRequest(request);
-        com.baidubce.qianfan.model.embedding.EmbeddingResponse embeddingResponse = qianfan.embedding(embeddingRequest);
+        TextEmbeddingParam embeddingRequest = this.toEmbeddingRequest(request, TextEmbeddingParam.TextType.DOCUMENT);
+        TextEmbeddingResult embeddingResponse = null;
+        try {
+            embeddingResponse = embedding.call(embeddingRequest);
+        } catch (NoApiKeyException e) {
+            throw new RuntimeException(e);
+        }
         if (embeddingResponse == null) {
             logger.warn("No embeddings returned for request: {}", request);
             return new EmbeddingResponse(List.of());
@@ -71,42 +69,47 @@ public class AliyunAiDashscopeEmbeddingClient extends AbstractEmbeddingClient {
         return generateEmbeddingResponse(embeddingRequest.getModel(), embeddingResponse);
     }
 
-    com.baidubce.qianfan.model.embedding.EmbeddingRequest toEmbeddingRequest(EmbeddingRequest embeddingRequest) {
-        var qianfanRequest = new com.baidubce.qianfan.model.embedding.EmbeddingRequest();
-        qianfanRequest.setInput(embeddingRequest.getInstructions());
-        if (this.defaultOptions != null) {
-            qianfanRequest.setModel(this.defaultOptions.getModel());
-            //qianfanRequest.setUserId(this.defaultOptions.getUser());
-            //qianfanRequest.setExtraParameters(this.defaultOptions.getExtraParameters());
-        }
+    TextEmbeddingParam toEmbeddingRequest(EmbeddingRequest embeddingRequest, TextEmbeddingParam.TextType textType) {
         if (embeddingRequest.getOptions() != null && !EmbeddingOptions.EMPTY.equals(embeddingRequest.getOptions())) {
-            qianfanRequest = ModelOptionsUtils.merge(embeddingRequest.getOptions(), qianfanRequest,
-                    com.baidubce.qianfan.model.embedding.EmbeddingRequest.class);
+            if (embeddingRequest.getOptions() instanceof AliyunAiDashscopeEmbeddingOptions embeddingOptions) {
+               return TextEmbeddingParam.builder()
+                        .textType(textType)
+                        .model(embeddingOptions.getModel())
+                        .texts(embeddingRequest.getInstructions())
+                        .build();
+            }
         }
-        return qianfanRequest;
+        else if (this.defaultOptions != null) {
+            return TextEmbeddingParam.builder()
+                    .textType(textType)
+                    .model(this.defaultOptions.getModel())
+                    .texts(embeddingRequest.getInstructions())
+                    .build();
+        }
+        return TextEmbeddingParam.builder()
+                .textType(textType)
+                .texts(embeddingRequest.getInstructions())
+                .build();
     }
 
-    private EmbeddingResponse generateEmbeddingResponse(String model, com.baidubce.qianfan.model.embedding.EmbeddingResponse embeddingResponse) {
-        List<Embedding> data = generateEmbeddingList(embeddingResponse.getData());
+    private EmbeddingResponse generateEmbeddingResponse(String model, TextEmbeddingResult embeddingResponse) {
+        List<Embedding> data = generateEmbeddingList(embeddingResponse.getOutput().getEmbeddings());
         EmbeddingResponseMetadata metadata = generateMetadata(model, embeddingResponse.getUsage());
         return new EmbeddingResponse(data, metadata);
     }
 
-    private List<Embedding> generateEmbeddingList(List<EmbeddingData> nativeData) {
+    private List<Embedding> generateEmbeddingList(List<TextEmbeddingResultItem> nativeData) {
         List<Embedding> data = new ArrayList<>();
-        for (EmbeddingData nativeDatum : nativeData) {
-            List<BigDecimal> nativeDatumEmbedding = nativeDatum.getEmbedding();
-            int nativeIndex = nativeDatum.getIndex();
-            Embedding embedding = new Embedding(nativeDatumEmbedding.stream().map(BigDecimal::doubleValue).collect(Collectors.toList()), nativeIndex);
+        for (TextEmbeddingResultItem nativeDatum : nativeData) {
+            Embedding embedding = new Embedding(nativeDatum.getEmbedding(), nativeDatum.getTextIndex());
             data.add(embedding);
         }
         return data;
     }
 
-    private EmbeddingResponseMetadata generateMetadata(String model, EmbeddingUsage embeddingsUsage) {
+    private EmbeddingResponseMetadata generateMetadata(String model, TextEmbeddingUsage embeddingsUsage) {
         EmbeddingResponseMetadata metadata = new EmbeddingResponseMetadata();
-        // metadata.put("model", model);
-        metadata.put("prompt-tokens", embeddingsUsage.getPromptTokens());
+        metadata.put("model", model);
         metadata.put("total-tokens", embeddingsUsage.getTotalTokens());
         return metadata;
     }
